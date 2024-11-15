@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "738651067984",
+    "project_id": "rg-mana",
+    "storage_bucket": "rg-mana.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738651067984:android:07ea58f95af230bb202355",
+        "android_client_info": {
+          "package_name": "com.example.rg_mana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBbmgAFamPpcSib2_f5QLzqhPTETa3W8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
