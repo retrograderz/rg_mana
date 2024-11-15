@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class FirestoreService {
@@ -8,18 +9,20 @@ class FirestoreService {
       FirebaseFirestore.instance.collection('notes');
 
   // CREATE
-  Future<void> addNote(String note) {
-    return notes.add({
-      'note': note,
-      'timestamp': Timestamp.now(),
+  void addNote(String noteText) {
+    FirebaseFirestore.instance.collection('notes').add({
+      'note': noteText,
+      'created_by': FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous',  // Set the creator
+      'created_at': FieldValue.serverTimestamp(),  // Set the timestamp
     });
   }
 
   // READ:
   Stream<QuerySnapshot> getNotesStream() {
-    final notesStream = notes.orderBy('timestamp', descending: true).snapshots();
-
-    return notesStream;
+    return FirebaseFirestore.instance
+        .collection('notes')
+        .orderBy('created_at', descending: true)
+        .snapshots();
   }
   // UPDATE:
   Future<void> updateNote(String docID, String newNote) {
