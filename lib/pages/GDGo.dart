@@ -10,6 +10,11 @@ class GDGoPage extends StatefulWidget {
 class _GDGoPageState extends State<GDGoPage> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text('GDGo'),
+      ),
+    );
   }
 }
