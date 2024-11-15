@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class UsersPage extends StatefulWidget {
@@ -18,6 +19,18 @@ class _UsersPageState extends State<UsersPage> {
       fontSize: 25,
     ),
   );
+
+  Future<String> getCurrentUserRole() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.email)
+          .get();
+      return snapshot.data()?['role'] ?? 'viewer';
+    }
+    return 'viewer';
+  }
 
   void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
     showModalBottomSheet(
@@ -97,78 +110,100 @@ class _UsersPageState extends State<UsersPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('Users').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text("Error: ${snapshot.error}");
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder<String>(
+        future: getCurrentUserRole(),
+        builder: (context, roleSnapshot) {
+          if (!roleSnapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+          final currentUserRole = roleSnapshot.data!;
 
-          if (snapshot.data == null) return const Text("No data");
+          return StreamBuilder(
+            stream: FirebaseFirestore.instance.collection('Users').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Text("Error: ${snapshot.error}");
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.data == null) return const Text("No data");
 
-          final users = snapshot.data!.docs;
+              final users = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: users.length,
-            padding: const EdgeInsets.all(8),
-            itemBuilder: (context, index) {
-              final user = users[index].data();
+              return ListView.builder(
+                itemCount: users.length,
+                padding: const EdgeInsets.all(8),
+                itemBuilder: (context, index) {
+                  final user = users[index].data();
+                  final userRole = user['role'] ?? 'viewer';
 
-              return GestureDetector(
-                onTap: () => _showUserDetails(context, user),
-                child: Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.grey.shade400,
-                          child: Text(
-                            user['username'][0].toUpperCase(),
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user['fullname'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  return GestureDetector(
+                    onTap: () => _showUserDetails(context, user),
+                    child: Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.grey.shade400,
+                              child: Text(
+                                user['username'][0].toUpperCase(),
+                                style: const TextStyle(color: Colors.black),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user['email'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user['fullname'],
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user['email'],
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            if (currentUserRole == 'admin' && userRole != 'admin')
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  // Điều hướng tới trang chỉnh sửa
+                                },
+                              ),
+                            if (currentUserRole == 'admin' && userRole != 'admin')
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  // Gọi hàm xóa user
+                                  FirebaseFirestore.instance
+                                    .collection('Users')
+                                    .doc(users[index].id)
+                                    .delete();
+                                },
+                              ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.more_vert),
-                          onPressed: () {
-                            _showUserDetails(context, user);
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           );
@@ -176,4 +211,5 @@ class _UsersPageState extends State<UsersPage> {
       ),
     );
   }
+
 }
