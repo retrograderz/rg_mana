@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../auth.dart';
+import 'edit_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,13 +27,21 @@ class _ProfilePageState extends State<ProfilePage> {
     await Auth().signOut();
   }
 
-  // Display user email
-  Widget _userUid() => Text(user?.email ?? 'User email');
-
   // Sign out button
   Widget _signOutButton() => ElevatedButton(
     onPressed: signOut,
     child: const Text('Sign out'),
+  );
+
+  // Edit profile button
+  Widget _editProfile(Map<String, dynamic> userData) => ElevatedButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => EditPage(userData: userData)),
+      );
+    },
+    child: const Text('Edit Profile', style: TextStyle(color: Colors.blue),)
   );
 
   // Title widget for app bar
@@ -49,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF06D6A0),
+      backgroundColor: const Color(0xFF06D6A0),
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: _title(),
@@ -58,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Center the column
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // User Details in Card Layout
@@ -80,36 +89,29 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       child: Container(
                         width: 380,
-                        height: 600,
+                        height: 450,
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            const SizedBox(height: 20,),
-                            // Avatar section
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                            const SizedBox(height: 20),
+                            // Avatar section with name below
+                            Column(
                               children: [
-                                const SizedBox(width: 20,),
-                                const CircleAvatar(
+                                CircleAvatar(
                                   radius: 50, // Avatar size
-                                  backgroundImage: NetworkImage(
-                                      'https://www.example.com/avatar.jpg'), // Replace with actual avatar URL
+                                  backgroundImage: userData?['avatar'] != null
+                                      ? NetworkImage(userData!['avatar'])
+                                      : const AssetImage('assets/default_avatar.png') as ImageProvider,
                                 ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '${userData?['username'] ?? 'No username'}',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.start,
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: true,
-                                    ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  '${userData?['fullname'] ?? 'No name available'}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                )
+                                  textAlign: TextAlign.center,
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
@@ -117,17 +119,43 @@ class _ProfilePageState extends State<ProfilePage> {
                             Expanded(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // User email and username displayed inside the card
                                   Text(
-                                    'Email: ${userData!['email']}',
+                                    userData!['email'],
                                     style: const TextStyle(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blueAccent,
                                     ),
                                   ),
                                   const SizedBox(height: 10),
+                                  Text(
+                                    'Username: ${userData['username'] ?? 'No Username'}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Student ID: ${userData['studentID'] ?? 'Not provided'}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Role: ${userData['role'] ?? 'Not assigned'}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Gcreds: ${userData['Gcreds'] ?? 0}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -142,7 +170,24 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             const SizedBox(height: 20),
-            _signOutButton(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: getUserDetail(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      Map<String, dynamic>? userData = snapshot.data!.data();
+                      return _editProfile(userData!); // Pass the userData
+                    } else {
+                      return Container(); // Placeholder while data is loading
+                    }
+                  },
+                ),
+                const SizedBox(width: 20,),
+                _signOutButton(),
+              ],
+            )
           ],
         ),
       ),

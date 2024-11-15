@@ -35,7 +35,7 @@ class _UsersPageState extends State<UsersPage> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -52,15 +52,31 @@ class _UsersPageState extends State<UsersPage> {
                       user['email'],
                       style: const TextStyle(
                         fontSize: 18,
-                        color: Colors.grey,
+                        color: Colors.blueAccent,
                       ),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
+                    Text(
+                      user['fullname'],
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10,),
+                    Text(
+                      "HSID: ${user['studentID']}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 5,),
+                    TextButton(
                       onPressed: () {
                         Navigator.pop(context); // Close the modal
                       },
-                      child: const Text('Close'),
+                      child: const Text('Close', style: TextStyle(color: Colors.red),),
                     ),
                   ],
                 ),
@@ -126,7 +142,7 @@ class _UsersPageState extends State<UsersPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user['username'],
+                                user['fullname'],
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

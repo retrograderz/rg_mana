@@ -15,6 +15,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
   final TextEditingController _controllerUsername = TextEditingController();
+  final TextEditingController _controllerFullname = TextEditingController();
+  final TextEditingController _controllerStudentID = TextEditingController();
 
   String? errorMessage;
 
@@ -34,6 +36,10 @@ class _RegisterPageState extends State<RegisterPage> {
           .set({
         'email': _controllerEmail.text,
         'username': _controllerUsername.text,
+        'fullname' : _controllerFullname.text,
+        'studentID' : _controllerStudentID.text,
+        'Gcreds' : 0,
+        'role' : 'newuser',
       });
 
       // Navigate to another page after registration
@@ -58,12 +64,12 @@ class _RegisterPageState extends State<RegisterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 100),
+                const SizedBox(height: 70),
 
                 // App Logo
                 const Icon(
                   Icons.person_add_alt_1_rounded,
-                  size: 150,
+                  size: 100,
                 ),
 
                 const SizedBox(height: 20),
@@ -90,10 +96,28 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 10),
 
+                // Fullname textfield
+                MyTextField(
+                  controller: _controllerFullname,
+                  hintText: 'Fullname',
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 10),
+
+                // StudentID textfield
+                MyTextField(
+                  controller: _controllerStudentID,
+                  hintText: 'HUST StudentID (eg: 202417010)',
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 10),
+
                 // Email textfield
                 MyTextField(
                   controller: _controllerEmail,
-                  hintText: 'Email',
+                  hintText: 'Email (eg: 24171010@gdg.hust.vn)',
                   obscureText: false,
                 ),
 
