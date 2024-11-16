@@ -59,12 +59,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _title() => const Text(
+    'Home',
+    style: TextStyle(
+      color: Colors.white,
+      fontFamily: 'Inter_24pt',
+      fontWeight: FontWeight.bold,
+      fontSize: 25,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: _title(),
+        elevation: 0,
+        centerTitle: true,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: openNoteBox,
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.black,
+        child: const Icon(
+            Icons.add,
+          color: Colors.white,
+        ),
       ),
       body: StreamBuilder(
         stream: firestoreService.getNotesStream(),
