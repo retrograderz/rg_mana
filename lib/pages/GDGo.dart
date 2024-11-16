@@ -112,10 +112,10 @@ class FullScreenImageScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         title: const Text('Full Screen Image',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black,
               fontFamily: 'Inter_24pt',
               fontWeight: FontWeight.bold,
               fontSize: 25,
@@ -123,7 +123,10 @@ class FullScreenImageScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(
+                Icons.close,
+              color: Colors.black,
+            ),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -136,7 +139,10 @@ class FullScreenImageScreen extends StatelessWidget {
           placeholder: (context, url) => const Center(
             child: CircularProgressIndicator(),
           ),
-          errorWidget: (context, url, error) => const Icon(Icons.error),
+          errorWidget: (context, url, error) => const Icon(
+              Icons.error,
+            color: Colors.white,
+          ),
           fit: BoxFit.contain,
         ),
       ),

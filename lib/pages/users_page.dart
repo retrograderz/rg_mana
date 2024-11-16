@@ -260,6 +260,154 @@ class _UsersPageState extends State<UsersPage> {
     );
   }
 
+  void _showAddMemberDialog(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
+    TextEditingController fullnameController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+    TextEditingController passwordController = TextEditingController();
+    TextEditingController IDController = TextEditingController();
+    TextEditingController usernameController = TextEditingController();
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Member'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  TextFormField(
+                    controller: fullnameController,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the full name';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the email';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: IDController,
+                    decoration: const InputDecoration(labelText: 'Student ID'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter student ID';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: usernameController,
+                    decoration: const InputDecoration(labelText: 'username'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter username';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  final FirebaseAuth auth = FirebaseAuth.instance;
+                  final currentUser = auth.currentUser; // Preserve PRES account
+
+                  try {
+                    // Create the new user account
+                    await auth.createUserWithEmailAndPassword(
+                      email: emailController.text,
+                      password: passwordController.text,
+                    );
+
+                    // Add the user details to Firestore
+                    await FirebaseFirestore.instance.collection('Users').doc(emailController.text).set({
+                      'fullname': fullnameController.text,
+                      'email': emailController.text,
+                      'studentID': IDController.text,
+                      'username': usernameController.text,
+                      'role': 'newuser',
+                      'Gcreds': int.parse('0'),
+                    });
+
+                    // Re-login to PRES account
+                    if (currentUser != null) {
+                      await auth.signOut();
+                      // await auth.signInWithEmailAndPassword(
+                      //   email: currentUser.email!,
+                      //   password: '123456', // Replace with your PRES password
+                      // );
+                    }
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Member added successfully')),
+                    );
+                  }
+                  on FirebaseAuthException catch (e) {
+                    String errorMessage;
+                    if (e.code == 'email-already-in-use') {
+                      errorMessage = 'The email is already in use by another account.';
+                    } else if (e.code == 'invalid-email') {
+                      errorMessage = 'The email address is not valid.';
+                    }
+                    // else if (e.code == 'weak-password') {
+                    //   errorMessage = 'The password is too weak.';
+                    // }
+                    else {
+                      errorMessage = 'An error occurred: ${e.message}';
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(errorMessage)),
+                    );
+                  }
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -368,7 +516,22 @@ class _UsersPageState extends State<UsersPage> {
           );
         },
       ),
-
+      floatingActionButton: FutureBuilder<UserRole>(
+        future: getCurrentUserRole(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data == UserRole.admin) {
+            return FloatingActionButton(
+              onPressed: () => _showAddMemberDialog(context),
+              backgroundColor: Colors.black,
+              child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
