@@ -491,14 +491,16 @@ class _UsersPageState extends State<UsersPage> {
                                     ],
                                   ),
                                 ),
-                                if (currentUserRole == UserRole.admin && userRole != UserRole.admin)
+                                if ((currentUserRole == UserRole.admin && userRole != UserRole.admin)
+                                || (currentUserRole == UserRole.editor && userRole != UserRole.admin && userRole != UserRole.editor))
                                   IconButton(
                                     icon: const Icon(Icons.edit),
                                     onPressed: () {
                                       _showEditUserDialog(context, user, userId);
                                     },
                                   ),
-                                if (currentUserRole == UserRole.admin && userRole != UserRole.admin)
+                                if ((currentUserRole == UserRole.admin && userRole != UserRole.admin)
+                                || (currentUserRole == UserRole.editor && userRole != UserRole.admin && userRole != UserRole.editor))
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () {
