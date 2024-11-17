@@ -252,6 +252,50 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // Request to be Member button
+  Widget _requestToBeMemberButton(Map<String, dynamic> userData) {
+    if (userData['role'] == 'newuser') {
+      return ElevatedButton(
+        onPressed: () async {
+          try {
+            if (user?.email != null) {
+              await FirebaseFirestore.instance
+                  .collection('Users')
+                  .doc(user!.email)
+                  .update({'role': 'Member Requested'});
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Request sent successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Error: User email not found.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to send request: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: const Text('Request to be Member'),
+      );
+    } else {
+      return const SizedBox.shrink(); // Empty widget for other roles
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,12 +364,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Buttons at the Bottom
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
                     children: [
-                      _editProfile(userData),
-                      const SizedBox(width: 20),
-                      _signOutButton(),
+                      _requestToBeMemberButton(userData),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _editProfile(userData),
+                          const SizedBox(width: 20),
+                          _signOutButton(),
+                        ],
+                      ),
                     ],
                   ),
                 ),
