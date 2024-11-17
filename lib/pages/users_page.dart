@@ -46,13 +46,24 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
-  void _showEditUserDialog(BuildContext context, Map<String, dynamic> user, String userId) {
+  void _showEditUserDialog(BuildContext context, Map<String, dynamic> user, String userId) async {
+    final currentUserRole = await getCurrentUserRole();
+    String userRole = user['role'];
+
+    if ((currentUserRole == UserRole.admin && userRole == 'PRES') ||
+        (currentUserRole == UserRole.editor && userRole == 'HEAD')) {
+      // Show a message and prevent the edit/delete if the roles match
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot modify or delete a user with the same role')),
+      );
+      return;
+    }
+
     final _formKey = GlobalKey<FormState>();
     TextEditingController fullnameController = TextEditingController(text: user['fullname']);
     TextEditingController emailController = TextEditingController(text: user['email']);
     TextEditingController gcredsController = TextEditingController(text: user['Gcreds']?.toString() ?? '');
 
-    // Lấy giá trị role hiện tại từ dữ liệu người dùng
     String? selectedRole = user['role'];
 
     showDialog<void>(
@@ -86,7 +97,6 @@ class _UsersPageState extends State<UsersPage> {
                       return null;
                     },
                   ),
-                  // DropdownButtonFormField for selecting role
                   DropdownButtonFormField<String>(
                     value: selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
@@ -98,7 +108,7 @@ class _UsersPageState extends State<UsersPage> {
                       );
                     }).toList(),
                     onChanged: (String? newValue) {
-                      selectedRole = newValue; // Cập nhật giá trị role
+                      selectedRole = newValue;
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -135,17 +145,14 @@ class _UsersPageState extends State<UsersPage> {
             TextButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  // Convert fullname into firstname and lastname
                   List<String> nameParts = fullnameController.text.trim().split(' ');
                   String firstname = nameParts.isNotEmpty ? nameParts.last : '';
                   String lastname = nameParts.length > 1
                       ? nameParts.sublist(0, nameParts.length - 1).join(' ')
                       : '';
 
-                  // Convert Gcreds to an integer before updating
                   int gcreds = int.parse(gcredsController.text);
 
-                  // Update the user's data in Firestore
                   await FirebaseFirestore.instance
                       .collection('Users')
                       .doc(userId)
@@ -154,132 +161,7 @@ class _UsersPageState extends State<UsersPage> {
                     'firstname': firstname,
                     'lastname': lastname,
                     'email': emailController.text,
-                    'role': selectedRole, // Ghi role được chọn
-                    'Gcreds': gcreds,
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('User updated successfully')),
-                  );
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditUserDialog2(BuildContext context, Map<String, dynamic> user, String userId) {
-    final _formKey = GlobalKey<FormState>();
-    TextEditingController fullnameController = TextEditingController(text: user['fullname']);
-    TextEditingController emailController = TextEditingController(text: user['email']);
-    TextEditingController gcredsController = TextEditingController(text: user['Gcreds']?.toString() ?? '');
-
-    // Lấy giá trị role hiện tại từ dữ liệu người dùng
-    String? selectedRole = user['role'];
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit User'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  TextFormField(
-                    controller: fullnameController,
-                    decoration: const InputDecoration(labelText: 'Full Name'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the full name';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the email';
-                      }
-                      return null;
-                    },
-                  ),
-                  // DropdownButtonFormField for selecting role
-                  DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    decoration: const InputDecoration(labelText: 'Role'),
-                    items: <String>['Member', 'Probationer']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      selectedRole = newValue; // Cập nhật giá trị role
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a role';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: gcredsController,
-                    decoration: const InputDecoration(labelText: 'Gcreds'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the Gcreds value';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  // Convert fullname into firstname and lastname
-                  List<String> nameParts = fullnameController.text.trim().split(' ');
-                  String firstname = nameParts.isNotEmpty ? nameParts.last : '';
-                  String lastname = nameParts.length > 1
-                      ? nameParts.sublist(0, nameParts.length - 1).join(' ')
-                      : '';
-
-                  // Convert Gcreds to an integer before updating
-                  int gcreds = int.parse(gcredsController.text);
-
-                  // Update the user's data in Firestore
-                  await FirebaseFirestore.instance
-                      .collection('Users')
-                      .doc(userId)
-                      .update({
-                    'fullname': fullnameController.text,
-                    'firstname': firstname,
-                    'lastname': lastname,
-                    'email': emailController.text,
-                    'role': selectedRole, // Ghi role được chọn
+                    'role': selectedRole,
                     'Gcreds': gcreds,
                   });
                   Navigator.of(context).pop();
@@ -297,7 +179,18 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   // Alert
-  Future<void> _showDeleteConfirmationDialog(BuildContext context, String userId) async {
+  Future<void> _showDeleteConfirmationDialog(BuildContext context, Map<String, dynamic> user, String userId) async {
+    final currentUserRole = await getCurrentUserRole();
+    String userRole = user['role'];
+
+    if ((currentUserRole == UserRole.admin && userRole == 'PRES') ||
+        (currentUserRole == UserRole.editor && userRole == 'HEAD')) {
+      // Show a message and prevent the edit/delete if the roles match
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot modify or delete a user with the same role')),
+      );
+      return;
+    }
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -960,7 +853,7 @@ class _UsersPageState extends State<UsersPage> {
                               IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () {
-                                  _showDeleteConfirmationDialog(context, userId);
+                                  _showDeleteConfirmationDialog(context, user, userId);
                                 },
                               ),
                           ],
