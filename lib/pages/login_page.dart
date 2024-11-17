@@ -22,24 +22,96 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
+  // Future<void> signInWithEmailAndPassword() async {
+  //   showDialog(context: context, builder:
+  //   (context) => const Center(
+  //     child: CircularProgressIndicator(),
+  //    ),
+  //   );
+  //
+  //   try {
+  //     await Auth().signInWithEmailAndPassword(
+  //       email: _controllerEmail.text,
+  //       password: _controllerPassword.text,
+  //     );
+  //     if (context.mounted) Navigator.pop(context);
+  //
+  //   } on FirebaseAuthException catch (e) {
+  //     Navigator.pop(context);
+  //     setState( () {
+  //       errorMessage = e.message;
+  //     });
+  //   }
+  // }
+
   Future<void> signInWithEmailAndPassword() async {
-    showDialog(context: context, builder:
-    (context) => const Center(
-      child: CircularProgressIndicator(),
-     ),
+    // Hiển thị hộp thoại loading
+    showDialog(
+      context: context,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
 
     try {
-      await Auth().signInWithEmailAndPassword(
-        email: _controllerEmail.text,
-        password: _controllerPassword.text,
+      // Đăng nhập và nhận UserCredential từ Firebase Authentication
+      final userCredential = await Auth().signInWithEmailAndPassword(
+        email: _controllerEmail.text.trim(),
+        password: _controllerPassword.text.trim(),
       );
-      if (context.mounted) Navigator.pop(context);
 
+      // Truy xuất thông tin user từ UserCredential
+      final user = userCredential.user;
+      if (user != null) {
+        // Kiểm tra xem người dùng có tồn tại trong Firestore không
+        final userDoc = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.email)  // Sử dụng email làm id tài liệu
+            .get();
+
+        // Nếu tài khoản không tồn tại trong Firestore, chặn đăng nhập
+        if (!userDoc.exists) {
+          await FirebaseAuth.instance.signOut(); // Đăng xuất người dùng
+
+          // Đóng loading dialog
+          Navigator.pop(context);
+
+          // Hiển thị thông báo popup
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text(
+                "Account Deleted",
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
+              ),
+              content: const Text(
+                "This account has been eliminated.",
+                style: TextStyle(fontSize: 18),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Đóng popup
+                  },
+                  child: const Text("OK"),
+                ),
+              ],
+            ),
+          );
+
+          return; // Kết thúc hàm nếu tài khoản không tồn tại
+        }
+
+        // Nếu tài khoản tồn tại trong Firestore, tiếp tục xử lý
+        if (context.mounted) Navigator.pop(context);
+
+        // Chuyển hướng người dùng (nếu cần)
+        // ...
+      }
     } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      setState( () {
-        errorMessage = e.message;
+      Navigator.pop(context); // Đóng loading dialog khi gặp lỗi
+      setState(() {
+        errorMessage = e.message ?? "An error occurred.";
       });
     }
   }

@@ -90,7 +90,7 @@ class _UsersPageState extends State<UsersPage> {
                   DropdownButtonFormField<String>(
                     value: selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
-                    items: <String>['Head', 'Member', 'Probationer']
+                    items: <String>['HEAD', 'Member', 'Probationer']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -367,6 +367,7 @@ class _UsersPageState extends State<UsersPage> {
       },
     );
   }
+
 
   void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
     showModalBottomSheet(
