@@ -38,7 +38,7 @@ class _UsersPageState extends State<UsersPage> {
     switch (role) {
       case 'PRES':
         return UserRole.admin;
-      case 'Head':
+      case 'HEAD':
         return UserRole.editor;
       case 'Member':
       default:
@@ -90,7 +90,7 @@ class _UsersPageState extends State<UsersPage> {
                   DropdownButtonFormField<String>(
                     value: selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
-                    items: <String>['HEAD', 'Member', 'Probationer']
+                    items: <String>['HEAD', 'Member', 'Probationer', 'newuser', 'Member Requested', 'Denied']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -367,7 +367,6 @@ class _UsersPageState extends State<UsersPage> {
       },
     );
   }
-
 
   void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
     showModalBottomSheet(
@@ -839,38 +838,39 @@ class _UsersPageState extends State<UsersPage> {
 
               final users = snapshot.data!.docs;
 
-              return
-                ListView.builder(
-                    itemCount: users.length,
-                    padding: const EdgeInsets.all(8),
-                    itemBuilder: (context, index) {
-                      final user = users[index].data();
-                      final userRole = _mapStringToRole(user['role'] ?? 'viewer');
-                      final userId = users[index].id;
+              return ListView.builder(
+                itemCount: users.length,
+                padding: const EdgeInsets.all(8),
+                itemBuilder: (context, index) {
+                  final user = users[index].data();
+                  final userRole = user['role'] ?? 'viewer';
+                  final userId = users[index].id;
 
-                      return GestureDetector(
-                        onTap: () => _showUserDetails(context, user),
-                        child: Card(
-                          elevation: 4,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: Colors.grey.shade400,
-                                  child: Text(
-                                    user['username'][0].toUpperCase(),
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                  return GestureDetector(
+                    onTap: () => _showUserDetails(context, user),
+                    child: Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.grey.shade400,
+                              child: Text(
+                                user['username'][0].toUpperCase(),
+                                style: const TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
                                       Text(
                                         user['fullname'],
@@ -879,7 +879,17 @@ class _UsersPageState extends State<UsersPage> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      if (userRole == 'Denied')
+                                        const Icon(
+                                          Icons.warning,
+                                          color: Colors.red,
+                                          size: 18,
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
                                       Text(
                                         user['email'],
                                         style: const TextStyle(
@@ -887,38 +897,80 @@ class _UsersPageState extends State<UsersPage> {
                                           color: Colors.grey,
                                         ),
                                       ),
+                                      if (userRole == 'Denied')
+                                        const Icon(
+                                          Icons.warning,
+                                          color: Colors.red,
+                                          size: 18,
+                                        ),
                                     ],
                                   ),
-                                ),
-                                if (currentUserRole == UserRole.admin && userRole != UserRole.admin)
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      _showEditUserDialog(context, user, userId);
-                                    },
-                                  ),
-                                if (currentUserRole == UserRole.editor && userRole != UserRole.admin && userRole != UserRole.editor)
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      _showEditUserDialog2(context, user, userId);
-                                    },
-                                  ),
-                                if ((currentUserRole == UserRole.admin && userRole != UserRole.admin)
-                                    || (currentUserRole == UserRole.editor && userRole != UserRole.admin && userRole != UserRole.editor))
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () {
-                                      _showDeleteConfirmationDialog(context, userId);
-                                    },
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                            if (userRole == 'Member Requested')
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    onPressed: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection('Users')
+                                          .doc(userId)
+                                          .update({'role': 'Member'});
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('User approved as Member'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection('Users')
+                                          .doc(userId)
+                                          .update({'role': 'Denied'});
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('User request denied'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            if ((currentUserRole == UserRole.admin && userRole != 'Admin') ||
+                                (currentUserRole == UserRole.editor &&
+                                    userRole != 'Admin' &&
+                                    userRole != 'Editor'))
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  _showEditUserDialog(context, user, userId);
+                                },
+                              ),
+                            if ((currentUserRole == UserRole.admin && userRole != 'Admin') ||
+                                (currentUserRole == UserRole.editor &&
+                                    userRole != 'Admin' &&
+                                    userRole != 'Editor'))
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  _showDeleteConfirmationDialog(context, userId);
+                                },
+                              ),
+                          ],
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   );
+                },
+              );
+
             },
           );
         },

@@ -11,9 +11,9 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
-        child: Text('noti_page'),
+        child: Text('UNDER CONSTRUCT..',textAlign: TextAlign.center, style: TextStyle(color: Colors.red, fontSize: 50, fontWeight: FontWeight.w600),),
       ),
     );
   }

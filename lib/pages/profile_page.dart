@@ -14,7 +14,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
 
-  // Fetch user details from Firestore
   Future<DocumentSnapshot<Map<String, dynamic>>> getUserDetail() async {
     return await FirebaseFirestore.instance
         .collection('Users')
@@ -22,174 +21,370 @@ class _ProfilePageState extends State<ProfilePage> {
         .get();
   }
 
-  // Sign out method
   Future<void> signOut() async {
     await Auth().signOut();
   }
 
-  // Sign out button
   Widget _signOutButton() => ElevatedButton(
     onPressed: signOut,
     child: const Text('Sign out'),
   );
 
-  // Edit profile button
   Widget _editProfile(Map<String, dynamic> userData) => ElevatedButton(
     onPressed: () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => EditPage(userData: userData)),
+        MaterialPageRoute(
+            builder: (context) => EditPage(userData: userData)),
       );
     },
-    child: const Text('Edit Profile', style: TextStyle(color: Colors.blue),)
+    child: const Text('Edit Profile',
+        style: TextStyle(color: Colors.blue)),
   );
 
-  // Title widget for app bar
-  Widget _title() => const Text(
-    'Profile',
-    style: TextStyle(
-      color: Colors.white,
-      fontFamily: 'Inter_24pt',
-      fontWeight: FontWeight.bold,
-      fontSize: 25,
+  Widget _avatarSection(Map<String, dynamic> userData) {
+    return CircleAvatar(
+      radius: 50,
+      backgroundImage: userData['avatar'] != null
+          ? NetworkImage(userData['avatar'])
+          : const AssetImage('assets/default_avatar.png') as ImageProvider,
+    );
+  }
+
+  Widget _roleCard(String role) => Card(
+    elevation: 5,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: Colors.blueGrey[800],
+    child: Container(
+      padding: const EdgeInsets.all(12.0),
+      width: 140,
+      child: Column(
+        children: [
+          const Icon(Icons.shield, color: Colors.amber, size: 30),
+          const SizedBox(height: 8),
+          const Text(
+            'Role',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            role,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.amberAccent,
+            ),
+          ),
+        ],
+      ),
     ),
   );
+
+  Widget _gcredsCard(int gcreds) => Card(
+    elevation: 5,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: Colors.green[800],
+    child: Container(
+      padding: const EdgeInsets.all(12.0),
+      width: 140,
+      child: Column(
+        children: [
+          const Icon(Icons.monetization_on,
+              color: Colors.yellow, size: 30),
+          const SizedBox(height: 8),
+          const Text(
+            'Gcreds',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$gcreds',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.lightGreenAccent,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _statCardWithIcon({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color? color,
+  })
+  => Card(
+    elevation: 5,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: color, // Dynamic card color
+    child: Container(
+      width: 140, // Matches avatar's diameter
+      height: 60, // Slightly taller for more visual balance
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.amber, size: 30),
+          const SizedBox(width: 10),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amberAccent,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _userInfoSection(Map<String, dynamic> userData) {
+    return Card(
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.blueAccent.shade400, width: 2), // Blue border
+      ),
+      color: Colors.black.withOpacity(0.8), // Dark background for a game feel
+      child: Container(
+        padding: const EdgeInsets.all(20.0),
+        width: 320,  // Make sure this width matches the width of the row above
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade900, Colors.blue.shade600], // Dark blue gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blueAccent.withOpacity(0.5),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.person, color: Colors.blueAccent, size: 28),
+                const SizedBox(width: 10),
+                Text(
+                  'Username:',
+                  style: TextStyle(
+                    color: Colors.blueAccent.shade100, // Light blue text
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              userData['username'] ?? 'No Username',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Divider(color: Colors.blueAccent, thickness: 1),
+            Row(
+              children: [
+                const Icon(Icons.badge, color: Colors.blueAccent, size: 28),
+                const SizedBox(width: 10),
+
+                Text(
+                  'Student ID:',
+                  style: TextStyle(
+                    color: Colors.blueAccent.shade100, // Light blue text
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              userData['studentID'] ?? 'Not provided',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Request to be Member button
+  Widget _requestToBeMemberButton(Map<String, dynamic> userData) {
+    if (userData['role'] == 'newuser') {
+      return ElevatedButton(
+        onPressed: () async {
+          try {
+            if (user?.email != null) {
+              await FirebaseFirestore.instance
+                  .collection('Users')
+                  .doc(user!.email)
+                  .update({'role': 'Member Requested'});
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Request sent successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Error: User email not found.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to send request: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: const Text('Request to be Member'),
+      );
+    } else {
+      return const SizedBox.shrink(); // Empty widget for other roles
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF06D6A0),
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: _title(),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // User Details in Card Layout
-            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              future: getUserDetail(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else if (snapshot.hasData) {
-                  Map<String, dynamic>? userData = snapshot.data!.data();
-                  return Center(
-                    child: Card(
-                      elevation: 5,
-                      margin: const EdgeInsets.fromLTRB(25, 40, 25, 0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Container(
-                        width: 380,
-                        height: 450,
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 20),
-                            // Avatar section with name below
-                            Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 50, // Avatar size
-                                  backgroundImage: userData?['avatar'] != null
-                                      ? NetworkImage(userData!['avatar'])
-                                      : const AssetImage('assets/default_avatar.png') as ImageProvider,
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '${userData?['fullname'] ?? 'No name available'}',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            // User info section
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userData!['email'],
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Username: ${userData['username'] ?? 'No Username'}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Student ID: ${userData['studentID'] ?? 'Not provided'}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Role: ${userData['role'] ?? 'Not assigned'}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Gcreds: ${userData['Gcreds'] ?? 0}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                } else {
-                  return const Center(child: Text("No data"));
-                }
-              },
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: const Color(0xFF1F1B24),
+      // appBar: AppBar(
+      //   title: const Text('Profile'),
+      //   backgroundColor: Colors.deepPurple,
+      // ),
+      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        future: getUserDetail(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (snapshot.hasData) {
+            Map<String, dynamic>? userData = snapshot.data!.data();
+
+            return Column(
               children: [
-                FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  future: getUserDetail(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      Map<String, dynamic>? userData = snapshot.data!.data();
-                      return _editProfile(userData!); // Pass the userData
-                    } else {
-                      return Container(); // Placeholder while data is loading
-                    }
-                  },
+                const SizedBox(height: 20),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Avatar and Stats Section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Enlarged Avatar
+                          CircleAvatar(
+                            radius: 70, // Increased size of avatar
+                            backgroundImage: userData!['avatar'] != null
+                                ? NetworkImage(userData['avatar'])
+                                : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                          ),
+                          const SizedBox(width: 30),
+                          // Stats Cards
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _statCardWithIcon(
+                                icon: Icons.rocket_launch_rounded,
+                                label: 'Role',
+                                value: userData['role'] ?? 'Not assigned',
+                                color: Colors.blueGrey[800],
+                              ),
+                              const SizedBox(height: 10),
+                              _statCardWithIcon(
+                                icon: Icons.star_rounded,
+                                label: 'Gcreds',
+                                value: '${userData['Gcreds'] ?? 0}',
+                                color: Colors.green[800],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      // User Info Section
+                      _userInfoSection(userData),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 20,),
-                _signOutButton(),
+                // Buttons at the Bottom
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Column(
+                    children: [
+                      _requestToBeMemberButton(userData),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _editProfile(userData),
+                          const SizedBox(width: 20),
+                          _signOutButton(),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
-            )
-          ],
-        ),
+            );
+          } else {
+            return const Center(child: Text("No data"));
+          }
+        },
       ),
     );
   }

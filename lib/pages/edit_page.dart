@@ -70,10 +70,12 @@ class _EditPageState extends State<EditPage> {
 
   @override
   Widget build(BuildContext context) {
+    String role = widget.userData['role'];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Edit Profile', style: TextStyle(color: Colors.white),),
+        title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: Padding(
@@ -116,32 +118,38 @@ class _EditPageState extends State<EditPage> {
                     return null;
                   },
                 ),
-                // Role field
-                TextFormField(
-                  controller: _roleController,
-                  decoration: const InputDecoration(labelText: 'Role'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your role';
-                    }
-                    return null;
-                  },
-                ),
-                // Gcreds field
-                TextFormField(
-                  controller: _gcredsController,
-                  decoration: const InputDecoration(labelText: 'Gcreds'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your Gcreds';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
+                // Conditionally show Role field if the user is 'PRES' or 'HEAD'
+                if (role == 'PRES' || role == 'HEAD') ...[
+                  // Role field
+                  TextFormField(
+                    controller: _roleController,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your role';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+                // Conditionally show Gcreds field if the user is 'PRES' or 'HEAD'
+                if (role == 'PRES' || role == 'HEAD') ...[
+                  // Gcreds field
+                  TextFormField(
+                    controller: _gcredsController,
+                    decoration: const InputDecoration(labelText: 'Gcreds'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your Gcreds';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 20),
                 // Save button
                 ElevatedButton(
@@ -168,3 +176,4 @@ class _EditPageState extends State<EditPage> {
     );
   }
 }
+
